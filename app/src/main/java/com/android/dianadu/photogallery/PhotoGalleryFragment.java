@@ -1,19 +1,27 @@
 package com.android.dianadu.photogallery;
 
+import android.annotation.TargetApi;
+import android.content.Context;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.widget.*;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.ArrayAdapter;
 import android.view.*;
 import android.os.*;
+import android.content.*;
 
 import java.util.ArrayList;
 
-import android.widget.ArrayAdapter;
 import android.graphics.Bitmap;
 
 import android.app.Activity;
+import android.app.SearchManager;
+import android.app.SearchableInfo;
+import android.support.v7.widget.SearchView;
 /**
  * Created by dianadu on 4/21/16.
  */
@@ -119,14 +127,18 @@ public class PhotoGalleryFragment extends Fragment{
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_photo_gallery, menu);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-//            //Pull out the Search View
-//            MenuItem searchItem = menu.findItem(R.id.menu_item_search);
-//            SearchView searchView = (SearchView) searchItem.getActionView();
-//
-//            //Get the data from our searchable.xml as a SearchableInfo
-//
-//        }
+
+        // pull out the search view
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+
+        // get the data from searchable.xml
+        SearchManager searchManager = (SearchManager)
+                getActivity().getSystemService(Context.SEARCH_SERVICE);
+        ComponentName name = getActivity().getComponentName();
+        SearchableInfo info = searchManager.getSearchableInfo(name);
+
+        searchView.setSearchableInfo(info);
     }
 
     @Override
