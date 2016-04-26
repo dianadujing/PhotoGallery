@@ -1,5 +1,6 @@
 package com.android.dianadu.photogallery;
 
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import android.widget.ArrayAdapter;
 import android.graphics.Bitmap;
 
-
+import android.app.Activity;
 /**
  * Created by dianadu on 4/21/16.
  */
@@ -26,19 +27,18 @@ public class PhotoGalleryFragment extends Fragment{
     private class FetchItemsTask extends AsyncTask<Void, Void, ArrayList<GalleryItem>> {
         @Override
         protected ArrayList<GalleryItem> doInBackground(Void... Params) {
-//            try{
-//                String result = new FlickrFetcher().getUrl("http://www.baidu.com");
-//                Log.i(TAG, "Fetched contents of URL:" + result);
-//            } catch (IOException e) {
-//                Log.e(TAG, "Failed to fetch exception", e);
-//            }
 //            String query = "android";
 
-//            if (query != null) {
-//                return new FlickrFetcher().search(query);
-//            } else {
-            return new FlickrFetcher().fetchItems();
-//            }
+            Activity activity = getActivity();
+            if (activity == null)
+                return new ArrayList<GalleryItem>();
+
+            String query = PreferenceManager.getDefaultSharedPreferences(activity).getString(FlickrFetcher.PREF_SEARCH_QUERY, null);
+            if (query != null) {
+                return new FlickrFetcher().search(query);
+            } else {
+                return new FlickrFetcher().fetchItems();
+            }
         }
 
         @Override
@@ -71,7 +71,9 @@ public class PhotoGalleryFragment extends Fragment{
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         setHasOptionsMenu(true);
-        new FetchItemsTask().execute();
+
+//        new FetchItemsTask().execute();
+        updateItems();
 
         mThumbnailThread = new ThumbnailDownloader<ImageView>(new Handler());
         mThumbnailThread.setListener(new ThumbnailDownloader.Listener<ImageView>() {
@@ -84,6 +86,10 @@ public class PhotoGalleryFragment extends Fragment{
         mThumbnailThread.start();
         mThumbnailThread.getLooper();
         Log.i(TAG, "Background thread started");
+    }
+
+    public void updateItems() {
+        new FetchItemsTask().execute();
     }
 
     @Override
@@ -103,30 +109,40 @@ public class PhotoGalleryFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
 
-        mGridView = (GridView) view.findViewById(R.id.gridView);
+        mGridView = (GridView) view.findViewById(R.id.photo_gallery_grid_view);
 
         setupAdapter();
         return view;
     }
 
-    //    @Override
-//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//        super.onCreateOptionsMenu(menu, inflater);
-//        inflater.inflate(R.menu.fragment_photo_gallery, menu);
-//    }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_photo_gallery, menu);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+//            //Pull out the Search View
+//            MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+//            SearchView searchView = (SearchView) searchItem.getActionView();
 //
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item){
-//        switch (item.getItemId()) {
-//            case R.id.menu_item_search:
-//                getActivity().onSearchRequested();
-//                return true;
-//            case R.id.menu_item_clear:
-//                return true;
-//            default:
-//                return super.onOptionsItemSelected(item);
+//            //Get the data from our searchable.xml as a SearchableInfo
+//
 //        }
-//    }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_search:
+                getActivity().onSearchRequested();
+                return true;
+            case R.id.menu_item_clear:
+                PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putString(FlickrFetcher.PREF_SEARCH_QUERY, null).commit();
+                updateItems();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
     void setupAdapter() {
         if (getActivity() == null || mGridView == null) return;
         if (mItems != null) {
