@@ -15,11 +15,14 @@ public class PhotoGalleryActivity extends SingleFragmentActivity {
 
     @Override
     public void onNewIntent(Intent intent) {
-        PhotoGalleryFragment fragment = (PhotoGalleryFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        PhotoGalleryFragment fragment = (PhotoGalleryFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment_container);
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             Log.i(TAG, "Received a new search query: " + query);
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putString(FlickrFetcher.PREF_SEARCH_QUERY, query).commit();
+            PreferenceManager.getDefaultSharedPreferences(this).edit().
+                    putString(FlickrFetcher.PREF_SEARCH_QUERY, query).
+                    commit();
         }
         fragment.updateItems();
     }
